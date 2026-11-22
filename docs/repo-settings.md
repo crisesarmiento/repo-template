@@ -1,10 +1,10 @@
 # Repository settings and local git identity
 
-This document describes settings to apply **by hand or with `gh api` after
-the repository exists**, and how to set the git author **inside each personal
-repository**. Do not run the commands below until the maintainer has approved
-them for a named repository. They are not applied by creating a repo from this
-template.
+This document describes settings to apply **by hand, with the scripts in this
+repository, or with `gh api` after the repository exists**, and how to set the
+git author **inside each personal repository**. Do not run the commands below
+until the maintainer has approved them for a named repository. They are not
+applied by creating a repo from this template.
 
 Replace `OWNER/REPO` with the repository, and `DEFAULT_BRANCH` with `main`
 (or `develop` if that is the working branch).
@@ -48,76 +48,97 @@ gh api --method PUT repos/OWNER/REPO/topics \
   -f names[]='topic-one' -f names[]='topic-two'
 ```
 
-## 2. Ruleset for the default branch
+## 2. Branch rules
 
-Preferred over classic branch protection. In the UI: **Settings → Rules →
-Rulesets → New ruleset**.
+Preferred over classic branch protection. This template ships a ruleset file
+and a script that applies it with `gh`.
 
-Target: the default branch (`~DEFAULT_BRANCH`). Enforcement: Active.
+The file [`.github/rulesets/main.json`](../.github/rulesets/main.json)
+is in the REST format accepted by
+`gh api repos/OWNER/REPO/rulesets --input`. It targets the default
+branch (`~DEFAULT_BRANCH`), with enforcement set to Active, and
+enforces:
 
-Rules to enable:
+- A pull request is required before merging. Approvals are 0, so a solo
+  owner can merge their own PR. Stale reviews are dismissed on push. The
+  only allowed merge method is squash.
+- Force pushes are blocked (`non_fast_forward`).
+- The target branch cannot be deleted (`deletion`).
 
-- Require a pull request before merging (approvals may be 0 on a
-  single-maintainer repo; the point is that direct pushes are blocked).
-- Require status checks to pass (name the real CI check, for example `ci`),
-  and require the branch to be up to date.
-- Block force pushes (`non_fast_forward`).
-- Block deletions of the target branch.
-- Require a linear history.
+There are no bypass actors. A solo owner does not need a bypass to merge
+their own PR, because `required_approving_review_count` is 0. Leaving
+`bypass_actors` empty means nobody, including the repository admin, can
+push directly to the default branch or skip the pull request rule.
 
-Also set squash merge only, as in the previous section. If the ruleset UI
-offers allowed merge methods, restrict them to squash.
+Status checks are not in the base file, because a new repository may not
+have CI yet. Pass `--checks` when the checks exist (see below). Linear
+history is kept by the squash-only merge setting in the previous section,
+together with `allowed_merge_methods: ["squash"]` in the ruleset.
 
-On a **free personal account**, rulesets may be unavailable for **private**
-repositories. Check before relying on them. If they cannot be enabled, keep
-the same rules in `AGENTS.md` and do not push to the default branch.
+### Apply
 
-Example API payload (do not run until approved; replace the status check
-name). Save the JSON to a file and send it with `gh api --method POST repos/OWNER/REPO/rulesets --input ruleset.json`:
+Do not run this until the maintainer has approved it for a named
+repository.
 
-```json
-{
-  "name": "Default branch",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": {
-    "ref_name": {
-      "include": ["~DEFAULT_BRANCH"],
-      "exclude": []
-    }
-  },
-  "rules": [
-    {
-      "type": "pull_request",
-      "parameters": {
-        "required_approving_review_count": 0,
-        "dismiss_stale_reviews_on_push": true,
-        "required_reviewers": [],
-        "require_code_owner_review": false,
-        "require_last_push_approval": false,
-        "required_review_thread_resolution": false,
-        "allowed_merge_methods": ["squash"]
-      }
-    },
-    {
-      "type": "required_status_checks",
-      "parameters": {
-        "strict_required_status_checks_policy": true,
-        "do_not_enforce_on_create": false,
-        "required_status_checks": [
-          { "context": "ci" }
-        ]
-      }
-    },
-    { "type": "non_fast_forward" },
-    { "type": "deletion" },
-    { "type": "required_linear_history" }
-  ]
-}
+```bash
+scripts/apply-ruleset.sh OWNER/REPO
 ```
 
-If `allowed_merge_methods` is rejected by the API, set squash-only in the
-repository merge settings instead and omit that parameter.
+The script uses `gh` for all API calls and `jq` to build the payload.
+It is idempotent: if a ruleset named
+`Default branch` already exists on the repository, it is updated with
+`PUT` instead of creating a duplicate.
+
+To preview the JSON without changing the repository:
+
+```bash
+scripts/apply-ruleset.sh OWNER/REPO --dry-run
+```
+
+Re-running the script replaces the ruleset with the payload you asked
+for. If you previously added status checks, pass `--checks` again when
+you re-apply.
+
+### Status checks
+
+When CI exists, add a `required_status_checks` rule with the real check
+names and require the branch to be up to date:
+
+```bash
+scripts/apply-ruleset.sh OWNER/REPO --checks ci,test
+```
+
+Replace `ci,test` with the names that GitHub Actions (or other CI)
+actually publishes. You can combine this with `--dry-run`.
+
+### Private repositories
+
+Rulesets and classic branch protection are available on private
+repositories only with GitHub Pro, Team, or Enterprise. A free personal
+or organization plan can use them on public repositories only.
+
+The script checks whether the repository is private and warns. It then
+tries the API anyway, in case the account already has a paid plan. If
+GitHub responds with HTTP 403, the script prints the explanation and
+exits non-zero. In that case (for example `research-lab` on a free
+plan), keep the same rules in `AGENTS.md` and do not push to the default
+branch.
+
+### Rollback
+
+After a successful apply, the script prints a delete command with the
+ruleset id:
+
+```bash
+gh api --method DELETE repos/OWNER/REPO/rulesets/RULESET_ID
+```
+
+### Manual alternative
+
+In the UI: **Settings → Rules → Rulesets → New ruleset**. Configure the
+same rules as in `.github/rulesets/main.json`. If `allowed_merge_methods`
+is rejected by the API, set squash-only in the repository merge settings
+instead and omit that parameter.
 
 ## 3. Security features
 
