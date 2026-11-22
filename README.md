@@ -32,9 +32,13 @@ until the maintainer has approved them for that repository.
 - [ ] One-line **description** and **3 to 8 topics**.
 - [ ] Default branch is `main`, or `develop` if this project works on
       `develop`.
-- [ ] **Ruleset** on the default branch: required pull request, required
-      green CI, no force-push, no branch deletion, linear history, squash
-      merge only, delete the head branch on merge. See
+- [ ] Allow **squash merging** only and **delete the head branch** on
+      merge (Settings → General).
+- [ ] Apply the default-branch **ruleset**:
+      `scripts/apply-ruleset.sh OWNER/REPO` (add `--checks ci,test` or
+      the real check names when CI exists). This requires a pull request,
+      allows squash only, and blocks force-push and deletion of the
+      default branch. See
       [docs/repo-settings.md](docs/repo-settings.md).
 - [ ] Apply standard labels: `scripts/sync-labels.sh OWNER/REPO` (only when
       asked). Delete unused GitHub default labels. Adjust `area:*` to the
@@ -68,9 +72,10 @@ until the maintainer has approved them for that repository.
       license means all rights reserved).
 - [ ] Leave Discussions off unless you need them.
 - [ ] `SECURITY.md` is optional; keep secret scanning if the plan allows it.
-- [ ] On a free personal account, a ruleset on a private repository may be
-      unavailable. Check first. If it cannot be enabled, keep the same rules
-      in `AGENTS.md`.
+- [ ] On a free plan, rulesets and branch protection cannot be enabled on
+      a private repository (they need GitHub Pro, Team, or Enterprise).
+      Check first. If they cannot be enabled, keep the same rules in
+      `AGENTS.md`.
 - [ ] You may remove the `good first issue` and `help wanted` labels if they
       will not be used.
 
@@ -88,8 +93,10 @@ until the maintainer has approved them for that repository.
 | [.github/dependabot.yml](.github/dependabot.yml) | Weekly GitHub Actions updates; commented npm example |
 | [.github/labels.yml](.github/labels.yml) | Standard labels |
 | [scripts/sync-labels.sh](scripts/sync-labels.sh) | Apply those labels with `gh label create --force` |
+| [`.github/rulesets/main.json`](.github/rulesets/main.json) | Default-branch ruleset (no status checks in the base file) |
+| [scripts/apply-ruleset.sh](scripts/apply-ruleset.sh) | Create or update that ruleset with `gh` |
 | [docs/github-project.md](docs/github-project.md) | Project views, fields, and automations |
-| [docs/repo-settings.md](docs/repo-settings.md) | Rulesets, security settings, and per-repo git identity |
+| [docs/repo-settings.md](docs/repo-settings.md) | Branch rules, security settings, and per-repo git identity |
 
 ## License
 
