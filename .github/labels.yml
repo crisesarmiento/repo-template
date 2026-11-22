@@ -1,0 +1,82 @@
+# Standard labels for repositories created from this template.
+# Apply with: scripts/sync-labels.sh OWNER/REPO
+# The script creates or updates labels; it does not delete existing ones.
+# After applying, delete unused GitHub default labels (bug, enhancement, …) by hand.
+# Adjust or add area:* labels to match the repository.
+
+# Type
+- name: tipo:bug
+  color: "d73a4a"
+  description: "A defect or unexpected behavior"
+
+- name: tipo:feature
+  color: "1d76db"
+  description: "A new capability or improvement"
+
+- name: tipo:docs
+  color: "0075ca"
+  description: "Documentation only"
+
+- name: tipo:chore
+  color: "6a737d"
+  description: "Maintenance, dependencies, or tooling"
+
+- name: tipo:test
+  color: "d4c5f9"
+  description: "Tests only"
+
+# Priority
+- name: p1
+  color: "d93f0b"
+  description: "High priority, on the critical path"
+
+- name: p2
+  color: "fbca04"
+  description: "Medium priority"
+
+- name: p3
+  color: "c2e0c6"
+  description: "Low priority"
+
+# Status
+- name: necesita-decision
+  color: "fbca04"
+  description: "Needs an approved decision before implementation"
+
+- name: decidida
+  color: "0e8a16"
+  description: "Decision approved; work may proceed"
+
+- name: bloqueado
+  color: "b60205"
+  description: "Blocked on another task or a decision"
+
+- name: en-revision
+  color: "8250df"
+  description: "A pull request is open and awaiting review"
+
+- name: listo-para-agente
+  color: "0e8a16"
+  description: "Ready for a coding agent to pick up"
+
+# Area (examples; adapt per repository)
+- name: area:ui
+  color: "1d76db"
+  description: "User interface"
+
+- name: area:datos
+  color: "2ea44f"
+  description: "Data, content, or fixtures"
+
+- name: area:ci
+  color: "5a6b7c"
+  description: "CI, builds, and repository tooling"
+
+# Community (public repositories; remove on private ones if unused)
+- name: good first issue
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: help wanted
+  color: "008672"
+  description: "Extra attention is needed"
